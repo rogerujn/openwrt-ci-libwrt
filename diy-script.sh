@@ -11,14 +11,6 @@
 
 # 移除要替换的包
 rm -rf package/luci-app-timecontrol
-rm -rf package/feeds/packages/fail2ban
-rm -rf package/feeds/packages/flent
-rm -rf package/feeds/packages/python-babel
-rm -rf package/feeds/packages/python-docker
-rm -rf package/feeds/packages/python-incremental
-rm -rf package/feeds/packages/python3-distutils
-rm -rf package/feeds/packages/python3
-rm -rf package/feeds/packages/python3-base
 rm -rf feeds/packages/net/mosdns
 # rm -rf feeds/packages/net/msd_lite
 # rm -rf feeds/packages/net/smartdns
