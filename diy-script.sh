@@ -10,6 +10,15 @@
 # sed -i 's|/bin/login|/bin/login -f root|g' feeds/packages/utils/ttyd/files/ttyd.config
 
 # 移除要替换的包
+rm -rf package/luci-app-timecontrol
+rm -rf package/feeds/packages/fail2ban
+rm -rf package/feeds/packages/flent
+rm -rf package/feeds/packages/python-babel
+rm -rf package/feeds/packages/python-docker
+rm -rf package/feeds/packages/python-incremental
+rm -rf package/feeds/packages/python3-distutils
+rm -rf package/feeds/packages/python3
+rm -rf package/feeds/packages/python3-base
 rm -rf feeds/packages/net/mosdns
 # rm -rf feeds/packages/net/msd_lite
 # rm -rf feeds/packages/net/smartdns
@@ -35,6 +44,9 @@ git clone --depth=1 https://github.com/esirplayground/luci-app-poweroff package/
 git clone --depth=1 https://github.com/Jason6111/luci-app-netdata package/luci-app-netdata
 git_sparse_clone openwrt-18.06 https://github.com/immortalwrt/luci applications/luci-app-eqos
 # git_sparse_clone master https://github.com/syb999/openwrt-19.07.1 package/network/services/msd_lite
+
+# 克隆第三方仓库中的 luci-app-timecontrol 源码（适配 OpenWrt 6.x 内核）
+git clone --depth=1 https://github.com/sirpdboy/luci-app-timecontrol package/luci-app-timecontrol
 
 # 科学上网插件
 #git clone --depth=1 -b main https://github.com/fw876/helloworld package/luci-app-ssr-plus
@@ -119,8 +131,7 @@ find package/luci-theme-*/* -type f -name '*luci-theme-*' -print -exec sed -i '/
 # sed -i 's/services/vpn/g' feeds/luci/applications/luci-app-v2ray-server/luasrc/view/v2ray_server/*.htm
 
 ./scripts/feeds update -a
-./scripts/feeds install -p feeds/luci -y luci-app-timecontrol
-./scripts/feeds install -a python3-distutils python3 python3-base
+./scripts/feeds install -a luci-app-timecontrol
 # 安装动态 DNS 核心脚本 + Web 管理插件
 ./scripts/feeds install -p feeds/packages -y ddns-scripts
 ./scripts/feeds install -p feeds/luci -y luci-app-ddns
