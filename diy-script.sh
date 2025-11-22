@@ -120,4 +120,9 @@ find package/luci-theme-*/* -type f -name '*luci-theme-*' -print -exec sed -i '/
 
 ./scripts/feeds update -a
 ./scripts/feeds install -p feeds/luci -y luci-app-timecontrol
+# 安装动态 DNS 核心脚本 + Web 管理插件
+./scripts/feeds install -p feeds/packages -y ddns-scripts
+./scripts/feeds install -p feeds/luci -y luci-app-ddns
+# 可选：安装中文语言包
+./scripts/feeds install -p feeds/luci -y luci-i18n-ddns-zh-cn
 ./scripts/feeds install -a
