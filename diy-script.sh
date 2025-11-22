@@ -120,6 +120,7 @@ find package/luci-theme-*/* -type f -name '*luci-theme-*' -print -exec sed -i '/
 
 ./scripts/feeds update -a
 ./scripts/feeds install -p feeds/luci -y luci-app-timecontrol
+./scripts/feeds install -a python3-distutils python3 python3-base
 # 安装动态 DNS 核心脚本 + Web 管理插件
 ./scripts/feeds install -p feeds/packages -y ddns-scripts
 ./scripts/feeds install -p feeds/luci -y luci-app-ddns
