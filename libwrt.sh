@@ -1,4 +1,5 @@
 rm -rf package/emortal/luci-app-athena-led
+rm -rf feeds/packages/net/smartdns
 
 # Git稀疏克隆，只克隆指定目录到本地
 function git_sparse_clone() {
