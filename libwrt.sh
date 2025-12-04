@@ -15,7 +15,7 @@ git_sparse_clone main https://github.com/linkease/istore luci
 git_sparse_clone main https://github.com/haiibo/packages luci-app-onliner
 chmod 755 package/luci-app-onliner/root/usr/share/onliner/setnlbw.sh
 # ddns-go
-git_sparse_clone main https://github.com/jeessy2/ddns-go .
+git_sparse_clone master https://github.com/jeessy2/ddns-go .
 
 ./scripts/feeds update -a
 ./scripts/feeds install -a
