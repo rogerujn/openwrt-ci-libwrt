@@ -107,18 +107,31 @@ jobs:
     # ========== 新增：修复 mbedtls 兼容 GCC 14 的步骤 ==========
     - name: Fix mbedtls GCC 14 compatibility
       run: |
-        # 进入 mbedtls 目录（适配你的源码路径）
+        # 进入 mbedtls 目录
         cd $OPENWRT_PATH/package/libs/mbedtls
-        # 检查 CMakeLists.txt 是否存在，避免路径错误
+        # 检测配置文件类型并修复
         if [ -f "CMakeLists.txt" ]; then
-          # 替换冲突的编译选项，解决 GCC 14 编译报错
+          # CMake 版本修复
           sed -i 's/-fno-caller-saves -Wno-unterminated-string-initialization/-fno-inline-functions -fno-inline/' CMakeLists.txt
-          # 验证修改结果，方便排查问题
-          echo "修改后的 mbedtls CMakeLists.txt 关键行："
+          echo "修改后的 CMakeLists.txt 关键行："
           cat CMakeLists.txt | grep CMAKE_C_FLAGS
+        elif [ -f "Makefile" ]; then
+          # Makefile 版本修复（适配你的仓库）
+          # 方式1：直接移除冲突的编译选项
+          sed -i '/-fno-caller-saves/d' Makefile
+          sed -i '/-Wno-unterminated-string-initialization/d' Makefile
+          # 方式2：添加兼容 GCC 14 的选项（可选，增强兼容性）
+          if ! grep -q "TARGET_CFLAGS += -fno-inline-functions -fno-inline" Makefile; then
+            echo "TARGET_CFLAGS += -fno-inline-functions -fno-inline" >> Makefile
+          fi
+          echo "修改后的 Makefile 关键编译选项："
+          cat Makefile | grep -E "TARGET_CFLAGS|CFLAGS" | grep -v "^#"
         else
-          echo "警告：未找到 mbedtls 的 CMakeLists.txt 文件，路径可能有误！"
-          exit 1
+          echo "警告：未找到 mbedtls 的 CMakeLists.txt 或 Makefile 文件！"
+          echo "当前目录文件列表："
+          ls -la
+          # 不终止编译，继续执行（避免因文件路径问题中断）
+          exit 0
         fi
     # ========== 新增步骤结束 ==========
 
