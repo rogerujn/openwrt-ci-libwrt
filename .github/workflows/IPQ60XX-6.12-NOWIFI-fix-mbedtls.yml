@@ -49,15 +49,15 @@ jobs:
         sudo -E systemctl daemon-reload
         sudo timedatectl set-timezone "$TZ"
 
-    # 第一步：严格降级GCC到13.3.0并验证
-    - name: Downgrade GCC to 13.3.0(降级GCC到13.3.0)
+    # 修正后的第一步：降级GCC到13.x（适配Ubuntu 24.04）
+    - name: Downgrade GCC to 13.x(降级GCC到13.x)
       run: |
         # 强制更新软件源并修复依赖
         sudo apt update -y && sudo apt --fix-broken install -y
-        # 卸载可能冲突的高版本GCC
-        sudo apt remove -y gcc-14 g++-14 || true
-        # 安装GCC 13及依赖（指定版本确保安装13.3.0）
-        sudo apt install -y --allow-downgrades gcc-13=13.3.0-2ubuntu1 g++-13=13.3.0-2ubuntu1 gcc-13-multilib g++-13-multilib
+        # 卸载高版本GCC（14）
+        sudo apt remove -y gcc-14 g++-14 gcc-14-multilib g++-14-multilib || true
+        # 安装系统可用的GCC 13（不指定具体版本）
+        sudo apt install -y gcc-13 g++-13 gcc-13-multilib g++-13-multilib
         # 彻底清理旧的编译器链接
         sudo update-alternatives --remove-all gcc || true
         sudo update-alternatives --remove-all g++ || true
