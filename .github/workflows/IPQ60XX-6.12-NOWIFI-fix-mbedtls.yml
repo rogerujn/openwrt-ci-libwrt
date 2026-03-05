@@ -105,18 +105,23 @@ jobs:
         VERSION_KERNEL=$(grep -oP 'LINUX_KERNEL_HASH-\K[0-9]+\.[0-9]+\.[0-9]+' target/linux/generic/kernel-6.12)
         echo "VERSION_KERNEL=$VERSION_KERNEL" >> $GITHUB_ENV
 
-    # 第二步：强制OpenWRT使用GCC13工具链编译
+    # 修正后的第二步：强制OpenWRT使用GCC13工具链（适配定制分支）
     - name: Force OpenWRT use GCC 13 toolchain(强制OpenWRT使用GCC13工具链)
       run: |
         cd $OPENWRT_PATH
-        # 修改工具链编译配置，指定GCC版本为13
+        # 先检查关键文件是否存在，避免报错
+        echo "===== 检查配置文件 ====="
+        ls -l include/ | grep -E "toolchain"
+        # 修改工具链编译配置，指定GCC版本为13（适配Ubuntu 24.04的13.2.0）
         sed -i 's/GCC_VERSION:=.*/GCC_VERSION:=13/' include/toolchain-build.mk
-        sed -i 's/GCC_PATCHVER:=.*/GCC_PATCHVER:=3/' include/toolchain-build.mk
-        # 修改交叉编译器配置
-        sed -i 's/TOOLCHAIN_DEFAULT_LANGUAGES.*/TOOLCHAIN_DEFAULT_LANGUAGES:=c,c++/' include/toolchain.mk
-        # 清理旧工具链缓存（关键：避免缓存干扰）
-        rm -rf staging_dir/toolchain-*
-        rm -rf build_dir/toolchain-*
+        sed -i 's/GCC_PATCHVER:=.*/GCC_PATCHVER:=2/' include/toolchain-build.mk
+        # 移除对不存在文件的修改，如需设置编译语言则添加到toolchain-build.mk
+        if ! grep -q "TOOLCHAIN_DEFAULT_LANGUAGES" include/toolchain-build.mk; then
+            echo "TOOLCHAIN_DEFAULT_LANGUAGES:=c,c++" >> include/toolchain-build.mk
+        fi
+        # 清理旧工具链缓存（添加|| true避免目录不存在时报错）
+        rm -rf staging_dir/toolchain-* || true
+        rm -rf build_dir/toolchain-* || true
         # 验证修改结果
         echo "===== 工具链版本配置验证 ====="
         grep -E "GCC_VERSION|GCC_PATCHVER" include/toolchain-build.mk
