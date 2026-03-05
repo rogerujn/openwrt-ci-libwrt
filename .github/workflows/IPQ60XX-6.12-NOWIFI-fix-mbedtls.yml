@@ -49,6 +49,23 @@ jobs:
         sudo -E systemctl daemon-reload
         sudo timedatectl set-timezone "$TZ"
 
+    # 新增：降级GCC到13.3.0（缩进与上下步骤保持一致）
+    - name: Downgrade GCC to 13.3.0(降级GCC到13.3.0)
+      run: |
+        # 更新软件源并安装 GCC 13
+        sudo apt update -y
+        sudo apt install -y gcc-13 g++-13 gcc-13-multilib g++-13-multilib
+        # 设置 GCC 13 为默认编译器
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 --slave /usr/bin/g++ g++ /usr/bin/g++-13
+        sudo update-alternatives --set gcc /usr/bin/gcc-13
+        # 验证版本（关键：确保输出是 13.3.0）
+        echo "当前 GCC 版本："
+        gcc --version
+        g++ --version
+        # 验证工具链是否正常
+        gcc -v
+      shell: /usr/bin/bash -e {0}
+
     - name: Combine Disks(合并磁盘)
       uses: easimon/maximize-build-space@master
       with:
@@ -111,19 +128,6 @@ jobs:
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
-
-    # 新增：修复 mbedtls 编译问题的步骤
-    - name: Fix mbedtls compile issue(修复mbedtls编译问题)
-      run: |
-        cd $OPENWRT_PATH
-        # 修复 memset 内联编译错误
-        sed -i '/TARGET_CFLAGS/ s/$/ -fno-inline-functions -fno-inline/' package/libs/mbedtls/Makefile
-        # 移除无效的编译参数
-        sed -i 's/-Wno-unterminated-string-initialization//g' package/libs/mbedtls/Makefile
-        # 可选：如果上述修复仍失败，取消下面注释降级mbedtls版本
-        sed -i 's/PKG_VERSION:=.*/PKG_VERSION:=3.5.2/' package/libs/mbedtls/Makefile
-        sed -i 's/PKG_HASH:=.*/PKG_HASH:=7235e5f5d4f69099ee98654cda699982964045c9a91377239991499965f37f91/' package/libs/mbedtls/Makefile
-      shell: /usr/bin/bash -e {0}
 
     - name: Compile Firmware(开始编译固件)
       id: compile
