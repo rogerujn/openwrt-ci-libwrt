@@ -56,6 +56,15 @@ jobs:
         temp-reserve-mb: 100
         root-reserve-mb: 1024
 
+    - name: Free up disk space(释放磁盘空间)
+      run: |
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /opt/ghc
+        sudo rm -rf /opt/hostedtoolcache
+        sudo rm -rf /usr/share/swift
+        df -h
+
     - name: Checkout
       uses: actions/checkout@main
 
