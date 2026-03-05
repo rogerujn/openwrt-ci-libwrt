@@ -49,22 +49,40 @@ jobs:
         sudo -E systemctl daemon-reload
         sudo timedatectl set-timezone "$TZ"
 
-    # 新增：降级GCC到13.3.0（缩进与上下步骤保持一致）
+    # 第一步：严格降级GCC到13.3.0并验证
     - name: Downgrade GCC to 13.3.0(降级GCC到13.3.0)
       run: |
-        # 更新软件源并安装 GCC 13
-        sudo apt update -y
-        sudo apt install -y gcc-13 g++-13 gcc-13-multilib g++-13-multilib
-        # 设置 GCC 13 为默认编译器
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 100 --slave /usr/bin/g++ g++ /usr/bin/g++-13
+        # 强制更新软件源并修复依赖
+        sudo apt update -y && sudo apt --fix-broken install -y
+        # 卸载可能冲突的高版本GCC
+        sudo apt remove -y gcc-14 g++-14 || true
+        # 安装GCC 13及依赖（指定版本确保安装13.3.0）
+        sudo apt install -y --allow-downgrades gcc-13=13.3.0-2ubuntu1 g++-13=13.3.0-2ubuntu1 gcc-13-multilib g++-13-multilib
+        # 彻底清理旧的编译器链接
+        sudo update-alternatives --remove-all gcc || true
+        sudo update-alternatives --remove-all g++ || true
+        # 重新配置默认编译器
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 200 --slave /usr/bin/g++ g++ /usr/bin/g++-13
         sudo update-alternatives --set gcc /usr/bin/gcc-13
-        # 验证版本（关键：确保输出是 13.3.0）
-        echo "当前 GCC 版本："
-        gcc --version
-        g++ --version
-        # 验证工具链是否正常
-        gcc -v
+        # 强制刷新环境变量
+        export CC=/usr/bin/gcc-13
+        export CXX=/usr/bin/g++-13
+        # 多重验证版本
+        echo "===== 系统GCC版本验证 ====="
+        gcc --version | head -1
+        g++ --version | head -1
+        # 检查编译器路径
+        echo "===== 编译器路径验证 ====="
+        which gcc
+        readlink -f $(which gcc)
+        # 检查环境变量
+        echo "===== 环境变量验证 ====="
+        echo $CC
+        echo $CXX
       shell: /usr/bin/bash -e {0}
+      env:
+        CC: /usr/bin/gcc-13
+        CXX: /usr/bin/g++-13
 
     - name: Combine Disks(合并磁盘)
       uses: easimon/maximize-build-space@master
@@ -86,6 +104,23 @@ jobs:
         echo "VERSION_INFO=$VERSION_INFO" >> $GITHUB_ENV
         VERSION_KERNEL=$(grep -oP 'LINUX_KERNEL_HASH-\K[0-9]+\.[0-9]+\.[0-9]+' target/linux/generic/kernel-6.12)
         echo "VERSION_KERNEL=$VERSION_KERNEL" >> $GITHUB_ENV
+
+    # 第二步：强制OpenWRT使用GCC13工具链编译
+    - name: Force OpenWRT use GCC 13 toolchain(强制OpenWRT使用GCC13工具链)
+      run: |
+        cd $OPENWRT_PATH
+        # 修改工具链编译配置，指定GCC版本为13
+        sed -i 's/GCC_VERSION:=.*/GCC_VERSION:=13/' include/toolchain-build.mk
+        sed -i 's/GCC_PATCHVER:=.*/GCC_PATCHVER:=3/' include/toolchain-build.mk
+        # 修改交叉编译器配置
+        sed -i 's/TOOLCHAIN_DEFAULT_LANGUAGES.*/TOOLCHAIN_DEFAULT_LANGUAGES:=c,c++/' include/toolchain.mk
+        # 清理旧工具链缓存（关键：避免缓存干扰）
+        rm -rf staging_dir/toolchain-*
+        rm -rf build_dir/toolchain-*
+        # 验证修改结果
+        echo "===== 工具链版本配置验证 ====="
+        grep -E "GCC_VERSION|GCC_PATCHVER" include/toolchain-build.mk
+      shell: /usr/bin/bash -e {0}
 
     - name: Generate Variables(生成变量)
       run: |
